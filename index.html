@@ -111,19 +111,19 @@
   .cat-title{display:flex;align-items:center;gap:9px;font-family:"Fredoka",sans-serif;font-weight:600;
     font-size:17px;color:var(--pool-deep);margin:0 0 4px}
   .cat-title .e{font-size:20px;line-height:1}
-  .skill{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--line)}
+  .skill{display:flex;align-items:flex-start;gap:11px;width:100%;text-align:left;background:transparent;
+    border:0;border-top:1px solid var(--line);padding:11px 4px;cursor:pointer;font-family:inherit;
+    transition:background .08s ease}
   .skill:first-of-type{border-top:0}
-  .skill .name{flex:1;font-weight:700;font-size:14.5px;color:var(--ink)}
-  .toggles{display:flex;gap:6px;flex:0 0 auto}
-  .tg{font-family:inherit;font-weight:800;font-size:12.5px;border:2px solid var(--line);background:#fff;
-    color:var(--ink-soft);border-radius:10px;padding:7px 10px;cursor:pointer;min-height:38px;white-space:nowrap;
-    display:inline-flex;align-items:center;gap:5px;transition:transform .04s ease}
-  .tg:active{transform:scale(.96)}
-  .tg .ic{font-size:13px}
-  .tg.s.on{background:var(--strength);border-color:var(--strength);color:#fff}
-  .tg.f.on{background:var(--focus);border-color:var(--focus);color:#fff}
-  .tg.s:not(.on):hover{border-color:var(--strength);color:var(--strength)}
-  .tg.f:not(.on):hover{border-color:var(--focus);color:var(--focus)}
+  .skill:hover{background:var(--bg)}
+  .skill:active{transform:scale(.997)}
+  .cb{flex:0 0 auto;width:26px;height:26px;border-radius:8px;border:2px solid var(--line);background:#fff;
+    display:flex;align-items:center;justify-content:center;color:#fff;font-size:15px;font-weight:900;margin-top:1px;
+    transition:all .1s ease}
+  .skill .name{flex:1;font-weight:700;font-size:14.5px;color:var(--ink);line-height:1.35}
+  .skill.on .cb{background:var(--strength);border-color:var(--strength)}
+  .skill.on .name{color:var(--ink-soft)}
+  .skill:not(.on):hover .cb{border-color:var(--strength)}
 
   /* ---------- Actions ---------- */
   .actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
@@ -186,7 +186,7 @@
   <div class="sun"></div>
   <div class="hero-inner">
     <h1>Swim Lesson Evaluations</h1>
-    <p>Mark each swimmer’s strengths and next steps, then create a warm note for their grown-ups.</p>
+    <p>Little Fish Program · Levels 1–3. Check off the skills each swimmer has shown, then create a warm end-of-summer note for their family.</p>
   </div>
   <svg class="waterline" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true">
     <path d="M0,30 C240,60 480,5 720,28 C960,52 1200,12 1440,32 L1440,60 L0,60 Z" fill="#F1FAF9" opacity=".5"></path>
@@ -217,10 +217,8 @@
     </div>
 
     <div class="progress">
-      <span class="pill"><b id="cMarked">0</b>/30 marked</span>
-      <span class="pill s">💪 <b id="cStr">0</b> strengths</span>
-      <span class="pill f">🎯 <b id="cFoc">0</b> to work on</span>
-      <span class="legend">Tap once to set · tap again to clear</span>
+      <span class="pill s">✓ <b id="cMarked">0</b> of <span id="cTotal">34</span> skills demonstrated</span>
+      <span class="legend">Tap a skill to check it off · tap again to clear</span>
     </div>
 
     <div class="roster">
@@ -237,7 +235,7 @@
   <div class="cats" id="cats"></div>
 
   <div class="actions">
-    <button class="btn primary" id="genBtn">✨ Create evaluation</button>
+    <button class="btn primary" id="genBtn">✨ Create summer note</button>
     <button class="btn ghost" id="saveBtn">💾 Save swimmer</button>
     <button class="btn ghost" id="clearBtn">↺ Clear marks</button>
   </div>
@@ -246,7 +244,7 @@
   <section class="eval" id="eval">
     <div class="eval-card">
       <div class="eval-top">
-        <div class="ribbon">Swim Lesson Progress</div>
+        <div class="ribbon">End-of-Summer Note</div>
         <div class="who" id="evalWho">Swimmer</div>
         <svg class="wl" viewBox="0 0 1440 40" preserveAspectRatio="none" aria-hidden="true">
           <path d="M0,22 C240,40 480,6 720,20 C960,34 1200,8 1440,22 L1440,40 L0,40 Z" fill="#FFFFFF"></path>
@@ -275,65 +273,103 @@
 /* Skill data — 30 skills across 6 categories.                         */
 /* strength = 3rd-person-singular verb phrase (subject is the name)    */
 /* focus    = gerund phrase that follows "we'll keep working on ..."    */
-/* tokens: {poss}=her/his/their  {refl}=herself/...                    */
+/* tokens: {poss} = her / his                                           */
 /* ------------------------------------------------------------------ */
 const CATEGORIES = [
-  {id:'comfort',    title:'Getting Comfortable in the Water', e:'💧'},
-  {id:'breath',     title:'Breath & Bubbles',                 e:'🫧'},
-  {id:'float',      title:'Floating & Balance',               e:'🛟'},
-  {id:'kick',       title:'Kicking',                          e:'🦵'},
-  {id:'arms',       title:'Arms & Moving Through Water',       e:'🌊'},
-  {id:'confidence', title:'Confidence & Water Safety',        e:'⭐'},
+  {id:'l1', title:'Level 1', e:'💧'},
+  {id:'l2', title:'Level 2', e:'🌊'},
+  {id:'l3', title:'Level 3', e:'🏊'},
 ];
 
+/* label = checkbox text (what she checks if demonstrated)               */
+/* focus = friendly phrase used after "we'll keep working on ..."        */
 const SKILLS = [
-  // Comfort
-  {id:'enter',     cat:'comfort', label:'Gets into the water happily',        strength:'hops into the water happily and ready to go',                     focus:'getting into the water feeling calm and confident'},
-  {id:'safeentry', cat:'comfort', label:'Enters safely (steps / wall)',       strength:'uses the steps and the wall to get in safely every time',         focus:'entering the water the safe way, using the steps or wall'},
-  {id:'facewet',   cat:'comfort', label:'Comfortable getting face & hair wet',strength:'happily gets {poss} face and hair wet without a fuss',            focus:'getting comfortable with a wet face and hair'},
-  {id:'splash',    cat:'comfort', label:'Okay being splashed',                strength:'giggles right through the splashes and stays relaxed',            focus:'staying relaxed and playful when the water splashes'},
-  {id:'wallwalk',  cat:'comfort', label:'Holds wall & moves along it',        strength:'scoots along the wall like a little crab with a great grip',      focus:'holding the wall and “crab-walking” along the edge'},
-  // Breath
-  {id:'bubmouth',  cat:'breath',  label:'Blows bubbles with mouth',           strength:'blows big bubbles on the surface like a pro',                     focus:'blowing bubbles with {poss} mouth at the surface'},
-  {id:'bubface',   cat:'breath',  label:'Blows bubbles with face in water',   strength:'puts {poss} mouth in and blows bubbles with confidence',          focus:'popping {poss} mouth in the water to blow bubbles'},
-  {id:'breath',    cat:'breath',  label:'Holds breath & dips face',           strength:'takes a big breath and dips {poss} face in bravely',              focus:'taking a big breath and dipping {poss} face under'},
-  {id:'submerge',  cat:'breath',  label:'Submerges head fully',               strength:'ducks all the way under with a big smile',                        focus:'getting {poss} whole head under the water'},
-  {id:'eyes',      cat:'breath',  label:'Opens eyes underwater',              strength:'opens {poss} eyes underwater to spot the toys',                   focus:'opening {poss} eyes under the water'},
-  {id:'bob',       cat:'breath',  label:'Bobs up and down',                   strength:'bobs up and down in a smooth, steady rhythm',                     focus:'bobbing up and down in a steady rhythm'},
-  // Float
-  {id:'frontsup',  cat:'float',   label:'Front float (with help)',            strength:'relaxes into a front float with just a little support',           focus:'relaxing into a front float with a helping hand'},
-  {id:'frontsolo', cat:'float',   label:'Front float (on their own)',         strength:'floats on {poss} tummy all by {refl}',                            focus:'holding a front float independently'},
-  {id:'backsup',   cat:'float',   label:'Back float (with help)',             strength:'lies back and floats calmly with a little support',               focus:'feeling calm in a back float with support'},
-  {id:'backsolo',  cat:'float',   label:'Back float (on their own)',          strength:'holds a lovely, relaxed back float on {poss} own',                focus:'holding a back float independently'},
-  {id:'star',      cat:'float',   label:'Holds a “starfish” float',           strength:'stretches out into a big, beautiful starfish float',              focus:'stretching arms and legs out into a starfish float'},
-  {id:'recover',   cat:'float',   label:'Returns to standing from a float',   strength:'rolls up and finds {poss} feet all by {refl}',                    focus:'getting back to a standing position after floating'},
-  // Kick
-  {id:'wallkick',  cat:'kick',    label:'Kicks while holding wall',           strength:'kicks up a storm while holding the wall',                         focus:'making strong, splashy kicks while holding the wall'},
-  {id:'boardkick', cat:'kick',    label:'Kicks on front with board',          strength:'powers across the pool kicking with a kickboard',                 focus:'kicking on {poss} tummy with a kickboard'},
-  {id:'backkick',  cat:'kick',    label:'Kicks on back',                      strength:'kicks smoothly while floating on {poss} back',                    focus:'kicking {poss} legs while floating on {poss} back'},
-  {id:'straight',  cat:'kick',    label:'Keeps legs long & straight',         strength:'kicks with lovely long, straight legs',                           focus:'keeping {poss} legs long and straight while kicking'},
-  // Arms
-  {id:'scoops',    cat:'arms',    label:'Uses arm “scoops” / paddles',        strength:'scoops the water with strong arm paddles',                        focus:'using big arm “scoops” to pull through the water'},
-  {id:'glide',     cat:'arms',    label:'Glides off the wall',                strength:'pushes off the wall and glides like a little rocket',             focus:'pushing off the wall and gliding'},
-  {id:'combo',     cat:'arms',    label:'Combines kicks & arms',              strength:'puts kicks and arms together to swim short distances',            focus:'putting kicks and arm scoops together'},
-  {id:'reach',     cat:'arms',    label:'Reaches & pulls to instructor',      strength:'reaches and pulls toward me with real determination',            focus:'reaching and pulling toward the instructor'},
-  // Confidence
-  {id:'jump',      cat:'confidence', label:'Jumps in & returns to wall',      strength:'jumps in bravely and turns right back to the wall',               focus:'jumping in and turning back to the wall safely'},
-  {id:'retrieve',  cat:'confidence', label:'Picks up a toy from the bottom',  strength:'reaches down to grab toys from the pool floor',                   focus:'reaching down to pick up a toy from the bottom'},
-  {id:'shortswim', cat:'confidence', label:'Swims a short distance solo',     strength:'swims a short distance all on {poss} own',                        focus:'swimming a short distance independently'},
-  {id:'listen',    cat:'confidence', label:'Listens & follows directions',    strength:'listens carefully and follows directions beautifully',           focus:'listening and following directions during lessons'},
-  {id:'confident', cat:'confidence', label:'Shows confidence & willingness to try', strength:'shows wonderful confidence and is always willing to try',  focus:'building confidence to try new things in the water'},
+  // ---- Level 1 ----
+  {id:'enterexit',  cat:'l1', label:'Enter & exit the pool using the side (safety slide, elbow-elbow-tummy)', focus:'getting in and out at the wall with the safe “elbow-elbow-tummy” slide'},
+  {id:'submface',   cat:'l1', label:'Submerging mouth, nose, and eyes',                          focus:'getting comfortable putting {poss} mouth, nose, and eyes in the water'},
+  {id:'submhead',   cat:'l1', label:'Submerging entire head',                                    focus:'submerging {poss} whole head under the water'},
+  {id:'bubbles',    cat:'l1', label:'Blowing bubbles with face in water, then fully submerged',  focus:'blowing bubbles with {poss} face in the water and then all the way under'},
+  {id:'bobbing',    cat:'l1', label:'Bobbing / bubble jumps (“Jumping Jellyfish”)',             focus:'our “Jumping Jellyfish” bobbing and bubble jumps'},
+  {id:'reachwall',  cat:'l1', label:'Reach to the wall from instructor (“rocket ship arms”)',   focus:'reaching to the wall with big “rocket ship arms”'},
+  {id:'frontglide', cat:'l1', label:'Front glide to instructor (“rocket ship arms”)',           focus:'gliding to me on {poss} front with “rocket ship arms”'},
+  {id:'backfloata', cat:'l1', label:'Assisted back float (starfish)',                            focus:'relaxing into a back-float “starfish” with a little help'},
+  {id:'backfloatu', cat:'l1', label:'Unassisted back float (starfish)',                          focus:'holding a back-float “starfish” all on {poss} own'},
+  {id:'seatentry',  cat:'l1', label:'Assisted seated entry',                                     focus:'a safe seated entry into the pool'},
+  {id:'jumpassist', cat:'l1', label:'Assisted standing jump progressions',                       focus:'building confidence with standing jumps'},
+  {id:'safety1',    cat:'l1', label:'Safety: intro to pool rules for swim lessons',              focus:'remembering our pool-safety rules'},
+  // ---- Level 2 ----
+  {id:'wallkick',   cat:'l2', label:'Kicking while sitting on the wall (red light, green light)',focus:'strong flutter kicks during “red light, green light” on the wall'},
+  {id:'flutterwall',cat:'l2', label:'Flutter kick to the wall',                                  focus:'flutter kicking all the way to the wall'},
+  {id:'flutterins', cat:'l2', label:'Flutter kick to the instructor from the wall',              focus:'flutter kicking from the wall out to me'},
+  {id:'backkicka',  cat:'l2', label:'Flutter kick on back, assisted (arms by side)',             focus:'flutter kicking on {poss} back with a little support'},
+  {id:'backkicku',  cat:'l2', label:'Flutter kick on back, unassisted (arms by side)',           focus:'flutter kicking on {poss} back all on {poss} own'},
+  {id:'rollbs',     cat:'l2', label:'Roll from back to stomach',                                 focus:'rolling over from {poss} back to {poss} tummy'},
+  {id:'rollsb',     cat:'l2', label:'Roll from stomach to back',                                 focus:'rolling from {poss} tummy onto {poss} back'},
+  {id:'jumpcatch',  cat:'l2', label:'Standing unassisted jump from side (instructor catches right away)', focus:'jumping in from the side on {poss} own'},
+  {id:'jumpswim',   cat:'l2', label:'Standing unassisted jump, swim to instructor (3–5 ft)',     focus:'jumping in and swimming a few feet to me'},
+  {id:'bubblejumps',cat:'l2', label:'7–10 consecutive bubble jumps without stopping',            focus:'stringing together several bubble jumps in a row'},
+  {id:'safety2',    cat:'l2', label:'Safety: reiterate pool rules (lifeguards, deep water, no running!)', focus:'the big pool-safety rules — lifeguards, deep water, and never running'},
+  // ---- Level 3 ----
+  {id:'bigarms',    cat:'l3', label:'Introduction to “Big Arms”',                                focus:'learning {poss} “Big Arms” swimming strokes'},
+  {id:'bigarmsw',   cat:'l3', label:'Unassisted swim with Big Arms (5–10 ft), instructor → wall',focus:'swimming with Big Arms from me to the wall'},
+  {id:'bigarmsi',   cat:'l3', label:'Unassisted swim with Big Arms (5–10 ft), wall → instructor',focus:'swimming with Big Arms from the wall out to me'},
+  {id:'jumpsubw',   cat:'l3', label:'Standing jump fully submerged, then swim back to wall',      focus:'jumping all the way under and swimming back to the wall'},
+  {id:'backkickd',  cat:'l3', label:'Back kick distance to 10–15 yards',                         focus:'building {poss} back-kick distance'},
+  {id:'backstroka', cat:'l3', label:'Introduction to backstroke arms, assisted',                 focus:'starting {poss} backstroke arms with a little help'},
+  {id:'backstroku', cat:'l3', label:'Introduction to backstroke arms, unassisted',               focus:'doing {poss} backstroke arms on {poss} own'},
+  {id:'tread',      cat:'l3', label:'Introduction to treading (10 seconds)',                     focus:'treading water for a few seconds'},
+  {id:'retrieve',   cat:'l3', label:'Retrieve object off bottom of pool, assisted',              focus:'reaching down to grab a toy off the pool bottom'},
+  {id:'jumpsubi',   cat:'l3', label:'Standing jump fully submerged, then swim to instructor (5–7 yds)', focus:'jumping under and swimming out to me'},
+  {id:'safety3',    cat:'l3', label:'Safety: review / reinforce Levels 1 & 2',                   focus:'reviewing everything from Levels 1 and 2'},
 ];
 
 const PRON = {
-  she :{poss:'her',   refl:'herself',    subj:'she',  Subj:'She',  isAre:'is',  hasHave:'has'},
-  he  :{poss:'his',   refl:'himself',    subj:'he',   Subj:'He',   isAre:'is',  hasHave:'has'},
+  she:{kid:'daughter', poss:'her', subj:'she', Subj:'She', obj:'her', isAre:'is', hasHave:'has'},
+  he :{kid:'son',      poss:'his', subj:'he',  Subj:'He',  obj:'him', isAre:'is', hasHave:'has'},
+};
+
+/* accomplishment phrasing — completes "{Name} ____" for demonstrated skills */
+const DID = {
+  enterexit:'learned to get in and out safely at the wall',
+  submface:'got comfortable putting {poss} mouth, nose, and eyes in the water',
+  submhead:'started submerging {poss} whole head',
+  bubbles:'blew bubbles with {poss} face in the water and went all the way under',
+  bobbing:'had a blast with our “Jumping Jellyfish” bubble jumps',
+  reachwall:'reached for the wall with big “rocket ship arms”',
+  frontglide:'glided to me on {poss} front with “rocket ship arms”',
+  backfloata:'relaxed into an assisted back-float starfish',
+  backfloatu:'held a back-float starfish all on {poss} own',
+  seatentry:'practiced a safe seated entry into the pool',
+  jumpassist:'built confidence with assisted standing jumps',
+  safety1:'learned our pool-safety rules',
+  wallkick:'showed off strong flutter kicks in “red light, green light”',
+  flutterwall:'flutter kicked all the way to the wall',
+  flutterins:'flutter kicked from the wall out to me',
+  backkicka:'flutter kicked on {poss} back with a little support',
+  backkicku:'flutter kicked on {poss} back independently',
+  rollbs:'rolled from {poss} back to {poss} tummy',
+  rollsb:'rolled from {poss} tummy onto {poss} back',
+  jumpcatch:'took a brave standing jump from the side',
+  jumpswim:'jumped in and swam a few feet to me',
+  bubblejumps:'linked together 7–10 bubble jumps without stopping',
+  safety2:'reviewed the big pool-safety rules',
+  bigarms:'started learning “Big Arms”',
+  bigarmsw:'swam with Big Arms from me to the wall',
+  bigarmsi:'swam with Big Arms from the wall out to me',
+  jumpsubw:'jumped fully under and swam back to the wall',
+  backkickd:'stretched {poss} back kick out to a longer distance',
+  backstroka:'began backstroke arms with a little help',
+  backstroku:'did backstroke arms on {poss} own',
+  tread:'started treading water',
+  retrieve:'dove down to retrieve a toy from the bottom',
+  jumpsubi:'jumped fully under and swam out to me',
+  safety3:'reviewed and reinforced everything from Levels 1 & 2',
 };
 
 /* ------------------------------------------------------------------ */
 /* State                                                               */
 /* ------------------------------------------------------------------ */
-const STORE_KEY='swimEvals.v1';
+const STORE_KEY='swimEvals.v2';
 let state={ id:null, name:'', age:'', pronoun:'she', selections:{}, note:'' };
 let storageOk=true;
 
@@ -355,66 +391,103 @@ function saveAll(list){
 /* ------------------------------------------------------------------ */
 /* Text generation                                                     */
 /* ------------------------------------------------------------------ */
-function tok(str,p){ return str.replace(/\{poss\}/g,p.poss).replace(/\{refl\}/g,p.refl); }
+function tok(str,p){ return str.replace(/\{poss\}/g,p.poss); }
 function joinList(arr){
   if(arr.length===0) return '';
   if(arr.length===1) return arr[0];
   if(arr.length===2) return arr[0]+' and '+arr[1];
   return arr.slice(0,-1).join(', ')+', and '+arr[arr.length-1];
 }
-function chunk(arr,n){ const o=[]; for(let i=0;i<arr.length;i+=n) o.push(arr.slice(i,i+n)); return o; }
 function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
 
 function buildNote(){
   const p = PRON[state.pronoun]||PRON.she;
-  const name = (state.name||'').trim() || 'Your swimmer';
-  const strengths = SKILLS.filter(s=>state.selections[s.id]==='strength').map(s=>tok(s.strength,p));
-  const focus     = SKILLS.filter(s=>state.selections[s.id]==='focus').map(s=>tok(s.focus,p));
+  const name = (state.name||'').trim() || 'your swimmer';
+  const done = SKILLS.filter(s=>state.selections[s.id]===true);
+  const todo = SKILLS.filter(s=>state.selections[s.id]!==true);
+  const total = SKILLS.length, n = done.length;
+  const allDone = todo.length===0 && n>0;
 
-  if(strengths.length===0 && focus.length===0){
-    return `Mark a few of ${name}'s strengths and the things to work on above, then tap “Create evaluation” and a friendly note will appear right here.`;
-  }
+  // ----- per-level progress -----
+  const levelStats = CATEGORIES.map(c=>{
+    const t = SKILLS.filter(s=>s.cat===c.id);
+    return { name:c.title, total:t.length, done:t.filter(s=>state.selections[s.id]===true).length };
+  });
+  const complete = levelStats.filter(l=>l.total && l.done===l.total).map(l=>l.name);
+  const started  = levelStats.filter(l=>l.done>0 && l.done<l.total).map(l=>l.name);
 
-  const parts=[];
+  const P1=[], P2=[], P3=[];
 
-  // Intro
-  parts.push(pick([
-    `${name} has been such a joy to have in lessons! Here’s a little snapshot of how things are going in the water.`,
-    `${name} is making wonderful progress in our swim lessons — here’s a quick update for you.`,
-    `It’s been so much fun watching ${name} learn and grow in the pool. Here’s where things stand!`,
+  // ===== Paragraph 1: celebrate the summer =====
+  P1.push(pick([
+    `It has been such a joy getting to know your ${p.kid}, ${name}, in swim lessons this summer!`,
+    `I have loved spending this summer in the water with your ${p.kid}, ${name}!`,
+    `What a treat it’s been getting to know your ${p.kid}, ${name}, at the pool this summer!`,
+  ]));
+  P1.push(pick([
+    `${name} brought wonderful energy to every lesson, and it was so much fun watching ${p.poss} confidence grow week by week.`,
+    `${name} showed up ready to learn and give ${p.poss} best every time, and ${p.subj} ${p.hasHave} grown so much more comfortable in the water.`,
+    `From the very first day, ${name} worked hard, had fun, and approached each new skill with real courage.`,
   ]));
 
-  // Strengths
-  if(strengths.length){
-    parts.push(pick([
-      `${name} is really shining in a few areas.`,
-      `There’s a lot to celebrate with ${name}.`,
-      `Here’s what ${name} is doing beautifully.`,
+  if(n>0){
+    // progress-by-level sentence
+    let detail='';
+    if(complete.length===CATEGORIES.length){
+      detail = `, completing the entire Little Fish program — ${joinList(complete)}`;
+    } else if(complete.length && started.length){
+      detail = `, finishing all of ${joinList(complete)} and making a great start on ${joinList(started)}`;
+    } else if(complete.length){
+      detail = `, finishing all of ${joinList(complete)}`;
+    } else if(started.length){
+      detail = `, making a great start on ${joinList(started)}`;
+    }
+    P1.push(`Over our lessons together, ${name} checked off ${n} of ${total} skills${detail}.`);
+
+    // a few specific highlights (most advanced demonstrated skills)
+    const hi = done.slice(-3).map(s=>tok(DID[s.id]||'',p)).filter(Boolean);
+    if(hi.length){
+      P1.push(pick([
+        `Some of ${p.poss} proudest moments came when ${name} ${joinList(hi)}.`,
+        `A few highlights this summer: ${name} ${joinList(hi)}.`,
+        `I was especially proud when ${name} ${joinList(hi)}.`,
+      ]));
+    }
+  } else {
+    P1.push(pick([
+      `We’re just getting started, and there is so much fun ahead for ${name} in the water.`,
+      `${name} is right at the beginning of ${p.poss} swimming journey, and there’s a lot to look forward to.`,
     ]));
-    const groups = chunk(strengths,3);
-    groups.forEach((g,i)=>{
-      if(i===0) parts.push(`${name} ${joinList(g)}.`);
-      else parts.push(pick([`${name} also ${joinList(g)}.`,`On top of that, ${name} ${joinList(g)}.`]));
-    });
   }
 
-  // Focus
-  if(focus.length){
-    const groups = chunk(focus,3);
-    const lead = pick([`As we keep swimming together, we’ll work on`,`Our next steps together are`,`Here’s what we’ll keep practicing:`]);
-    parts.push(`${lead} ${joinList(groups[0])}.`);
-    if(groups[1]) parts.push(`We’ll also focus on ${joinList(groups[1])}.`);
-    if(groups[2]) parts.push(`And we’ll keep building ${joinList(groups[2])}.`);
+  // ===== Paragraph 2: what's next =====
+  if(allDone){
+    P2.push(pick([
+      `${name} has now shown me every skill on ${p.poss} list — what an accomplishment! ${p.Subj} is more than ready to keep building on these skills and take on bigger challenges.`,
+      `Remarkably, ${name} checked off everything on ${p.poss} list this summer. ${p.Subj} is ready for whatever comes next!`,
+    ]));
+  } else if(todo.length){
+    const phrases = todo.slice(0,4).map(s=>tok(s.focus,p));
+    P2.push(pick([
+      `As ${name} keeps swimming, the next things we’ll work on together are ${joinList(phrases)}.`,
+      `Looking ahead, some great next steps for ${name} are ${joinList(phrases)}.`,
+      `When ${name} is back in the pool, we’ll keep practicing ${joinList(phrases)}.`,
+    ]));
+    P2.push(pick([
+      `Each of these will come with a bit more practice and plenty of pool time — ${p.subj} ${p.isAre} closer than ${p.subj} might think.`,
+      `A little time in the water before next session will go a long way, and these will click before you know it.`,
+      `The best thing you can do is keep it fun and let ${p.obj} splash around — confidence in the water grows fastest when ${p.subj} ${p.isAre} enjoying it.`,
+    ]));
   }
 
-  // Closing
-  parts.push(pick([
-    `${name} should be so proud of how far ${p.subj} ${p.hasHave} come. I can’t wait to see what’s next! 🏊`,
-    `I’m so proud of ${name}, and I love watching ${p.poss} confidence grow each week. See you at the pool! 🌊`,
-    `Keep up the wonderful work, ${name} — ${p.subj} ${p.isAre} doing great! ☀️`,
+  // ===== Paragraph 3: close =====
+  P3.push(pick([
+    `It’s been a true pleasure being ${p.poss} swim instructor. Keep practicing, stay safe around the water, and enjoy the rest of your summer, ${name}! ☀️`,
+    `Thank you for letting me be part of ${p.poss} swimming journey this summer. I’m so proud of everything ${name} accomplished — have a wonderful rest of your summer! 🏊`,
+    `Keep up the great work, ${name} — ${p.subj} ${p.isAre} going to be a little fish in no time. It was a joy teaching ${p.obj}, and I hope you all enjoy the rest of your summer! 🌊`,
   ]));
 
-  return parts.join(' ');
+  return [P1.join(' '), P2.join(' '), P3.join(' ')].filter(Boolean).join('\n\n');
 }
 
 /* ------------------------------------------------------------------ */
@@ -423,6 +496,7 @@ function buildNote(){
 function renderSkills(){
   const root=document.getElementById('cats');
   root.innerHTML='';
+  document.getElementById('cTotal').textContent=SKILLS.length;
   CATEGORIES.forEach(c=>{
     const card=document.createElement('section');
     card.className='card';
@@ -431,42 +505,37 @@ function renderSkills(){
     h.innerHTML=`<span class="e">${c.e}</span> ${c.title}`;
     card.appendChild(h);
     SKILLS.filter(s=>s.cat===c.id).forEach(s=>{
-      const row=document.createElement('div');
+      const row=document.createElement('button');
+      row.type='button';
       row.className='skill';
-      row.innerHTML=`
-        <span class="name">${s.label}</span>
-        <div class="toggles">
-          <button class="tg s" data-id="${s.id}" data-v="strength" aria-pressed="false"><span class="ic">💪</span>Strength</button>
-          <button class="tg f" data-id="${s.id}" data-v="focus" aria-pressed="false"><span class="ic">🎯</span>Work on</button>
-        </div>`;
+      row.dataset.id=s.id;
+      row.setAttribute('aria-pressed','false');
+      row.innerHTML=`<span class="cb">✓</span><span class="name">${s.label}</span>`;
+      row.addEventListener('click',onToggle);
       card.appendChild(row);
     });
     root.appendChild(card);
   });
-  root.querySelectorAll('.tg').forEach(b=>b.addEventListener('click',onToggle));
 }
 
 function onToggle(e){
-  const btn=e.currentTarget;
-  const id=btn.dataset.id, v=btn.dataset.v;
-  if(state.selections[id]===v) delete state.selections[id];
-  else state.selections[id]=v;
+  const id=e.currentTarget.dataset.id;
+  if(state.selections[id]===true) delete state.selections[id];
+  else state.selections[id]=true;
   syncToggles(); updateCounts();
 }
 
 function syncToggles(){
-  document.querySelectorAll('.tg').forEach(b=>{
-    const on=state.selections[b.dataset.id]===b.dataset.v;
+  document.querySelectorAll('.skill').forEach(b=>{
+    const on=state.selections[b.dataset.id]===true;
     b.classList.toggle('on',on);
     b.setAttribute('aria-pressed',on?'true':'false');
   });
 }
 
 function updateCounts(){
-  const vals=Object.values(state.selections);
-  document.getElementById('cMarked').textContent=vals.length;
-  document.getElementById('cStr').textContent=vals.filter(v=>v==='strength').length;
-  document.getElementById('cFoc').textContent=vals.filter(v=>v==='focus').length;
+  const n=Object.values(state.selections).filter(v=>v===true).length;
+  document.getElementById('cMarked').textContent=n;
 }
 
 function renderRoster(){
@@ -561,18 +630,18 @@ function generate(){
 function buildPrint(){
   readForm();
   const name=state.name.trim()||'Your swimmer';
-  const strengths=SKILLS.filter(s=>state.selections[s.id]==='strength').map(s=>s.label);
-  const focus=SKILLS.filter(s=>state.selections[s.id]==='focus').map(s=>s.label);
+  const done=SKILLS.filter(s=>state.selections[s.id]===true).map(s=>s.label);
+  const todo=SKILLS.filter(s=>state.selections[s.id]!==true).map(s=>s.label);
   const note=document.getElementById('note').value;
   const date=new Date().toLocaleDateString(undefined,{year:'numeric',month:'long',day:'numeric'});
   const li=arr=>arr.length?arr.map(x=>`<div class="p-li">• ${escapeHtml(x)}</div>`).join(''):'<div class="p-li" style="color:#5A8087">—</div>';
   document.getElementById('printArea').innerHTML=`
     <h1 class="p-title">🏊 ${escapeHtml(name)}${state.age?` · age ${escapeHtml(state.age)}`:''}</h1>
-    <div class="p-sub">Swim Lesson Progress · ${date}</div>
+    <div class="p-sub">Little Fish Swim Lessons · ${date}</div>
     <div class="p-note">${escapeHtml(note)}</div>
     <div class="p-cols">
-      <div class="p-col"><div class="p-h">💪 Strengths</div>${li(strengths)}</div>
-      <div class="p-col"><div class="p-h">🎯 Working on</div>${li(focus)}</div>
+      <div class="p-col"><div class="p-h">✓ Demonstrated this summer</div>${li(done)}</div>
+      <div class="p-col"><div class="p-h">Continuing to work on</div>${li(todo)}</div>
     </div>`;
 }
 
