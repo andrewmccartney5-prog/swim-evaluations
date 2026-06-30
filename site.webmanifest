@@ -1,0 +1,16 @@
+{
+  "name": "Swim Lesson Evaluations",
+  "short_name": "Swim Evals",
+  "description": "Mark each swimmer's strengths and next steps, then create a warm note for their family.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0E6E78",
+  "theme_color": "#0E6E78",
+  "icons": [
+    { "src": "icon-192.png", "type": "image/png", "sizes": "192x192", "purpose": "any" },
+    { "src": "icon-512.png", "type": "image/png", "sizes": "512x512", "purpose": "any" },
+    { "src": "icon-512.png", "type": "image/png", "sizes": "512x512", "purpose": "maskable" }
+  ]
+}
