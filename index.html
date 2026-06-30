@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#0E6E78" />
+<title>Swim Lesson Evaluations</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --pool-deep:#0E6E78;
+    --aqua:#16A8A0;
+    --aqua-bright:#3BD6C6;
+    --water-light:#DFF6F4;
+    --bg:#F1FAF9;
+    --surface:#FFFFFF;
+    --ink:#0A3A40;
+    --ink-soft:#5A8087;
+    --strength:#0F9E72;
+    --strength-bg:#DCF3EB;
+    --focus:#E97D24;
+    --focus-bg:#FCEBD8;
+    --sun:#FFC24B;
+    --line:#D6ECEA;
+    --shadow:0 10px 30px -16px rgba(10,58,64,.35);
+    --radius:18px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:"Nunito",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+    color:var(--ink);
+    background:var(--bg);
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:940px;margin:0 auto;padding:0 16px 64px}
+
+  /* ---------- Header / waterline signature ---------- */
+  header.hero{
+    position:relative;
+    background:linear-gradient(160deg,var(--aqua) 0%,var(--pool-deep) 100%);
+    color:#fff;
+    padding:30px 16px 0;
+    overflow:hidden;
+  }
+  .hero-inner{max-width:940px;margin:0 auto;position:relative;z-index:2;padding-bottom:54px}
+  .hero .sun{position:absolute;top:-26px;right:-10px;width:130px;height:130px;border-radius:50%;
+    background:radial-gradient(circle at 50% 50%,rgba(255,194,75,.9),rgba(255,194,75,0) 68%);z-index:1}
+  .hero h1{font-family:"Fredoka",sans-serif;font-weight:600;font-size:clamp(26px,5.5vw,40px);
+    margin:0;letter-spacing:.2px;line-height:1.05}
+  .hero p{margin:8px 0 0;font-weight:600;font-size:clamp(14px,2.6vw,17px);color:#E6FBF8;max-width:46ch}
+  .waterline{position:absolute;left:0;right:0;bottom:-1px;width:100%;display:block;z-index:1}
+
+  /* ---------- Cards ---------- */
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);padding:18px}
+  .card + .card{margin-top:16px}
+
+  /* ---------- Swimmer bar ---------- */
+  .swimmer{margin-top:-30px;position:relative;z-index:3}
+  .field-row{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end}
+  .field{flex:1 1 200px;min-width:0}
+  label.lab{display:block;font-size:12px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;
+    color:var(--ink-soft);margin:0 0 5px 2px}
+  input[type=text]{width:100%;font-family:inherit;font-size:18px;font-weight:700;color:var(--ink);
+    background:var(--bg);border:2px solid var(--line);border-radius:12px;padding:11px 13px}
+  input[type=text]:focus{outline:none;border-color:var(--aqua);background:#fff}
+  .seg{display:inline-flex;background:var(--bg);border:2px solid var(--line);border-radius:12px;padding:3px;gap:2px}
+  .seg button{font-family:inherit;font-weight:800;font-size:14px;color:var(--ink-soft);background:transparent;
+    border:0;border-radius:9px;padding:8px 12px;cursor:pointer}
+  .seg button[aria-pressed=true]{background:var(--aqua);color:#fff}
+  .age-field{flex:0 0 86px}
+  .age-field input{text-align:center}
+
+  .roster{margin-top:14px;border-top:1px dashed var(--line);padding-top:12px}
+  .roster-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+  .roster-head .t{font-family:"Fredoka",sans-serif;font-weight:600;font-size:15px;color:var(--pool-deep)}
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{display:inline-flex;align-items:center;gap:7px;background:var(--water-light);color:var(--pool-deep);
+    border:1px solid var(--line);border-radius:999px;padding:6px 6px 6px 13px;font-weight:800;font-size:13px;cursor:pointer}
+  .chip:hover{border-color:var(--aqua)}
+  .chip.active{background:var(--aqua);color:#fff;border-color:var(--aqua)}
+  .chip .x{display:inline-flex;width:20px;height:20px;align-items:center;justify-content:center;border-radius:50%;
+    background:rgba(10,58,64,.12);color:inherit;font-weight:800;font-size:13px;line-height:1}
+  .chip.active .x{background:rgba(255,255,255,.25)}
+  .roster-empty{color:var(--ink-soft);font-size:13px;font-weight:600}
+
+  /* ---------- Progress ---------- */
+  .progress{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:14px}
+  .pill{display:inline-flex;align-items:center;gap:7px;font-weight:800;font-size:13px;
+    border-radius:999px;padding:6px 12px;border:1px solid var(--line);background:var(--bg);color:var(--ink-soft)}
+  .pill b{font-size:14px}
+  .pill.s{background:var(--strength-bg);color:var(--strength);border-color:transparent}
+  .pill.f{background:var(--focus-bg);color:var(--focus);border-color:transparent}
+  .legend{margin-left:auto;font-size:12px;font-weight:700;color:var(--ink-soft)}
+
+  /* ---------- Skills ---------- */
+  .cats{display:grid;grid-template-columns:1fr;gap:16px;margin-top:16px}
+  @media(min-width:760px){.cats{grid-template-columns:1fr 1fr}}
+  .cat-title{display:flex;align-items:center;gap:9px;font-family:"Fredoka",sans-serif;font-weight:600;
+    font-size:17px;color:var(--pool-deep);margin:0 0 4px}
+  .cat-title .e{font-size:20px;line-height:1}
+  .skill{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--line)}
+  .skill:first-of-type{border-top:0}
+  .skill .name{flex:1;font-weight:700;font-size:14.5px;color:var(--ink)}
+  .toggles{display:flex;gap:6px;flex:0 0 auto}
+  .tg{font-family:inherit;font-weight:800;font-size:12.5px;border:2px solid var(--line);background:#fff;
+    color:var(--ink-soft);border-radius:10px;padding:7px 10px;cursor:pointer;min-height:38px;white-space:nowrap;
+    display:inline-flex;align-items:center;gap:5px;transition:transform .04s ease}
+  .tg:active{transform:scale(.96)}
+  .tg .ic{font-size:13px}
+  .tg.s.on{background:var(--strength);border-color:var(--strength);color:#fff}
+  .tg.f.on{background:var(--focus);border-color:var(--focus);color:#fff}
+  .tg.s:not(.on):hover{border-color:var(--strength);color:var(--strength)}
+  .tg.f:not(.on):hover{border-color:var(--focus);color:var(--focus)}
+
+  /* ---------- Actions ---------- */
+  .actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+  .btn{font-family:"Fredoka",sans-serif;font-weight:600;font-size:16px;border-radius:14px;border:0;
+    padding:13px 20px;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+  .btn.primary{background:var(--pool-deep);color:#fff;box-shadow:0 8px 18px -8px rgba(14,110,120,.7)}
+  .btn.primary:hover{background:#0c5e67}
+  .btn.ghost{background:#fff;color:var(--pool-deep);border:2px solid var(--line)}
+  .btn.ghost:hover{border-color:var(--aqua)}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+
+  /* ---------- Evaluation output ---------- */
+  .eval{margin-top:16px;display:none}
+  .eval.show{display:block}
+  .eval-card{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);overflow:hidden}
+  .eval-top{background:linear-gradient(160deg,var(--aqua) 0%,var(--pool-deep) 100%);color:#fff;padding:16px 18px 22px;position:relative}
+  .eval-top .ribbon{font-family:"Fredoka",sans-serif;font-weight:600;font-size:13px;letter-spacing:.4px;
+    text-transform:uppercase;opacity:.92}
+  .eval-top .who{font-family:"Fredoka",sans-serif;font-weight:600;font-size:24px;margin-top:2px}
+  .eval-top .wl{position:absolute;left:0;right:0;bottom:-1px;width:100%;display:block}
+  .eval-body{padding:18px}
+  .eval-body .small{font-size:12px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--ink-soft);
+    margin:0 0 7px 2px;display:flex;align-items:center;justify-content:space-between}
+  textarea#note{width:100%;min-height:190px;font-family:"Nunito",sans-serif;font-size:16px;line-height:1.65;
+    color:var(--ink);background:var(--bg);border:2px solid var(--line);border-radius:12px;padding:14px;resize:vertical}
+  textarea#note:focus{outline:none;border-color:var(--aqua);background:#fff}
+  .out-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+  .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(20px);background:var(--ink);
+    color:#fff;font-weight:800;font-size:14px;padding:11px 18px;border-radius:999px;opacity:0;pointer-events:none;
+    transition:opacity .25s,transform .25s;z-index:50}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .notice{font-size:12.5px;font-weight:700;color:var(--focus);background:var(--focus-bg);border-radius:10px;
+    padding:8px 12px;margin-top:12px;display:none}
+  .notice.show{display:block}
+
+  footer{max-width:940px;margin:18px auto 0;color:var(--ink-soft);font-size:12.5px;font-weight:600;
+    text-align:center;padding:0 16px}
+
+  /* ---------- Print ---------- */
+  #printArea{display:none}
+  @media print{
+    body{background:#fff}
+    .wrap,header.hero,.toast,footer{display:none !important}
+    #printArea{display:block;padding:0 6mm}
+    .p-title{font-family:"Fredoka",sans-serif;font-weight:600;font-size:22px;color:#0E6E78;margin:0}
+    .p-sub{font-weight:700;color:#5A8087;margin:2px 0 14px}
+    .p-note{font-size:14px;line-height:1.6;white-space:pre-wrap;margin-bottom:16px}
+    .p-cols{display:flex;gap:24px}
+    .p-col{flex:1}
+    .p-h{font-weight:800;text-transform:uppercase;font-size:12px;letter-spacing:.4px;color:#0E6E78;margin:0 0 6px;
+      border-bottom:1.5px solid #D6ECEA;padding-bottom:4px}
+    .p-li{font-size:13px;margin:3px 0}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="sun"></div>
+  <div class="hero-inner">
+    <h1>Swim Lesson Evaluations</h1>
+    <p>Mark each swimmer’s strengths and next steps, then create a warm note for their grown-ups.</p>
+  </div>
+  <svg class="waterline" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true">
+    <path d="M0,30 C240,60 480,5 720,28 C960,52 1200,12 1440,32 L1440,60 L0,60 Z" fill="#F1FAF9" opacity=".5"></path>
+    <path d="M0,38 C240,12 480,58 720,36 C960,16 1200,56 1440,34 L1440,60 L0,60 Z" fill="#F1FAF9"></path>
+  </svg>
+</header>
+
+<div class="wrap">
+
+  <!-- Swimmer info -->
+  <section class="card swimmer">
+    <div class="field-row">
+      <div class="field">
+        <label class="lab" for="name">Swimmer’s name</label>
+        <input type="text" id="name" placeholder="e.g. Maya" autocomplete="off" />
+      </div>
+      <div class="field age-field">
+        <label class="lab" for="age">Age</label>
+        <input type="text" id="age" placeholder="3" inputmode="numeric" autocomplete="off" />
+      </div>
+      <div class="field" style="flex:0 0 auto">
+        <label class="lab">Refer to them as</label>
+        <div class="seg" id="pron" role="group" aria-label="Pronoun">
+          <button type="button" data-p="she" aria-pressed="true">She</button>
+          <button type="button" data-p="he" aria-pressed="false">He</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="progress">
+      <span class="pill"><b id="cMarked">0</b>/30 marked</span>
+      <span class="pill s">💪 <b id="cStr">0</b> strengths</span>
+      <span class="pill f">🎯 <b id="cFoc">0</b> to work on</span>
+      <span class="legend">Tap once to set · tap again to clear</span>
+    </div>
+
+    <div class="roster">
+      <div class="roster-head">
+        <span class="t">Saved swimmers</span>
+        <button class="btn ghost" id="newBtn" style="font-size:14px;padding:8px 14px">+ New swimmer</button>
+      </div>
+      <div class="chips" id="chips"><span class="roster-empty">No swimmers saved yet — they’ll appear here once you save.</span></div>
+    </div>
+    <div class="notice" id="storeNotice">Heads up: this browser isn’t saving swimmers right now (often the case inside a preview). On the published GitHub Pages site or your own browser, the roster saves automatically.</div>
+  </section>
+
+  <!-- Skills -->
+  <div class="cats" id="cats"></div>
+
+  <div class="actions">
+    <button class="btn primary" id="genBtn">✨ Create evaluation</button>
+    <button class="btn ghost" id="saveBtn">💾 Save swimmer</button>
+    <button class="btn ghost" id="clearBtn">↺ Clear marks</button>
+  </div>
+
+  <!-- Output -->
+  <section class="eval" id="eval">
+    <div class="eval-card">
+      <div class="eval-top">
+        <div class="ribbon">Swim Lesson Progress</div>
+        <div class="who" id="evalWho">Swimmer</div>
+        <svg class="wl" viewBox="0 0 1440 40" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M0,22 C240,40 480,6 720,20 C960,34 1200,8 1440,22 L1440,40 L0,40 Z" fill="#FFFFFF"></path>
+        </svg>
+      </div>
+      <div class="eval-body">
+        <p class="small">Note for the family <span style="font-weight:700;text-transform:none;letter-spacing:0;color:var(--ink-soft)">— edit anything you like</span></p>
+        <textarea id="note" spellcheck="true"></textarea>
+        <div class="out-actions">
+          <button class="btn ghost" id="rewordBtn">🔁 Reword it</button>
+          <button class="btn ghost" id="copyBtn">📋 Copy</button>
+          <button class="btn ghost" id="printBtn">🖨️ Print / Save PDF</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>Made for poolside use · works on phone or computer · your notes stay on this device.</footer>
+</div>
+
+<div id="printArea"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ------------------------------------------------------------------ */
+/* Skill data — 30 skills across 6 categories.                         */
+/* strength = 3rd-person-singular verb phrase (subject is the name)    */
+/* focus    = gerund phrase that follows "we'll keep working on ..."    */
+/* tokens: {poss}=her/his/their  {refl}=herself/...                    */
+/* ------------------------------------------------------------------ */
+const CATEGORIES = [
+  {id:'comfort',    title:'Getting Comfortable in the Water', e:'💧'},
+  {id:'breath',     title:'Breath & Bubbles',                 e:'🫧'},
+  {id:'float',      title:'Floating & Balance',               e:'🛟'},
+  {id:'kick',       title:'Kicking',                          e:'🦵'},
+  {id:'arms',       title:'Arms & Moving Through Water',       e:'🌊'},
+  {id:'confidence', title:'Confidence & Water Safety',        e:'⭐'},
+];
+
+const SKILLS = [
+  // Comfort
+  {id:'enter',     cat:'comfort', label:'Gets into the water happily',        strength:'hops into the water happily and ready to go',                     focus:'getting into the water feeling calm and confident'},
+  {id:'safeentry', cat:'comfort', label:'Enters safely (steps / wall)',       strength:'uses the steps and the wall to get in safely every time',         focus:'entering the water the safe way, using the steps or wall'},
+  {id:'facewet',   cat:'comfort', label:'Comfortable getting face & hair wet',strength:'happily gets {poss} face and hair wet without a fuss',            focus:'getting comfortable with a wet face and hair'},
+  {id:'splash',    cat:'comfort', label:'Okay being splashed',                strength:'giggles right through the splashes and stays relaxed',            focus:'staying relaxed and playful when the water splashes'},
+  {id:'wallwalk',  cat:'comfort', label:'Holds wall & moves along it',        strength:'scoots along the wall like a little crab with a great grip',      focus:'holding the wall and “crab-walking” along the edge'},
+  // Breath
+  {id:'bubmouth',  cat:'breath',  label:'Blows bubbles with mouth',           strength:'blows big bubbles on the surface like a pro',                     focus:'blowing bubbles with {poss} mouth at the surface'},
+  {id:'bubface',   cat:'breath',  label:'Blows bubbles with face in water',   strength:'puts {poss} mouth in and blows bubbles with confidence',          focus:'popping {poss} mouth in the water to blow bubbles'},
+  {id:'breath',    cat:'breath',  label:'Holds breath & dips face',           strength:'takes a big breath and dips {poss} face in bravely',              focus:'taking a big breath and dipping {poss} face under'},
+  {id:'submerge',  cat:'breath',  label:'Submerges head fully',               strength:'ducks all the way under with a big smile',                        focus:'getting {poss} whole head under the water'},
+  {id:'eyes',      cat:'breath',  label:'Opens eyes underwater',              strength:'opens {poss} eyes underwater to spot the toys',                   focus:'opening {poss} eyes under the water'},
+  {id:'bob',       cat:'breath',  label:'Bobs up and down',                   strength:'bobs up and down in a smooth, steady rhythm',                     focus:'bobbing up and down in a steady rhythm'},
+  // Float
+  {id:'frontsup',  cat:'float',   label:'Front float (with help)',            strength:'relaxes into a front float with just a little support',           focus:'relaxing into a front float with a helping hand'},
+  {id:'frontsolo', cat:'float',   label:'Front float (on their own)',         strength:'floats on {poss} tummy all by {refl}',                            focus:'holding a front float independently'},
+  {id:'backsup',   cat:'float',   label:'Back float (with help)',             strength:'lies back and floats calmly with a little support',               focus:'feeling calm in a back float with support'},
+  {id:'backsolo',  cat:'float',   label:'Back float (on their own)',          strength:'holds a lovely, relaxed back float on {poss} own',                focus:'holding a back float independently'},
+  {id:'star',      cat:'float',   label:'Holds a “starfish” float',           strength:'stretches out into a big, beautiful starfish float',              focus:'stretching arms and legs out into a starfish float'},
+  {id:'recover',   cat:'float',   label:'Returns to standing from a float',   strength:'rolls up and finds {poss} feet all by {refl}',                    focus:'getting back to a standing position after floating'},
+  // Kick
+  {id:'wallkick',  cat:'kick',    label:'Kicks while holding wall',           strength:'kicks up a storm while holding the wall',                         focus:'making strong, splashy kicks while holding the wall'},
+  {id:'boardkick', cat:'kick',    label:'Kicks on front with board',          strength:'powers across the pool kicking with a kickboard',                 focus:'kicking on {poss} tummy with a kickboard'},
+  {id:'backkick',  cat:'kick',    label:'Kicks on back',                      strength:'kicks smoothly while floating on {poss} back',                    focus:'kicking {poss} legs while floating on {poss} back'},
+  {id:'straight',  cat:'kick',    label:'Keeps legs long & straight',         strength:'kicks with lovely long, straight legs',                           focus:'keeping {poss} legs long and straight while kicking'},
+  // Arms
+  {id:'scoops',    cat:'arms',    label:'Uses arm “scoops” / paddles',        strength:'scoops the water with strong arm paddles',                        focus:'using big arm “scoops” to pull through the water'},
+  {id:'glide',     cat:'arms',    label:'Glides off the wall',                strength:'pushes off the wall and glides like a little rocket',             focus:'pushing off the wall and gliding'},
+  {id:'combo',     cat:'arms',    label:'Combines kicks & arms',              strength:'puts kicks and arms together to swim short distances',            focus:'putting kicks and arm scoops together'},
+  {id:'reach',     cat:'arms',    label:'Reaches & pulls to instructor',      strength:'reaches and pulls toward me with real determination',            focus:'reaching and pulling toward the instructor'},
+  // Confidence
+  {id:'jump',      cat:'confidence', label:'Jumps in & returns to wall',      strength:'jumps in bravely and turns right back to the wall',               focus:'jumping in and turning back to the wall safely'},
+  {id:'retrieve',  cat:'confidence', label:'Picks up a toy from the bottom',  strength:'reaches down to grab toys from the pool floor',                   focus:'reaching down to pick up a toy from the bottom'},
+  {id:'shortswim', cat:'confidence', label:'Swims a short distance solo',     strength:'swims a short distance all on {poss} own',                        focus:'swimming a short distance independently'},
+  {id:'listen',    cat:'confidence', label:'Listens & follows directions',    strength:'listens carefully and follows directions beautifully',           focus:'listening and following directions during lessons'},
+  {id:'confident', cat:'confidence', label:'Shows confidence & willingness to try', strength:'shows wonderful confidence and is always willing to try',  focus:'building confidence to try new things in the water'},
+];
+
+const PRON = {
+  she :{poss:'her',   refl:'herself',    subj:'she',  Subj:'She',  isAre:'is',  hasHave:'has'},
+  he  :{poss:'his',   refl:'himself',    subj:'he',   Subj:'He',   isAre:'is',  hasHave:'has'},
+};
+
+/* ------------------------------------------------------------------ */
+/* State                                                               */
+/* ------------------------------------------------------------------ */
+const STORE_KEY='swimEvals.v1';
+let state={ id:null, name:'', age:'', pronoun:'she', selections:{}, note:'' };
+let storageOk=true;
+
+/* ------------------------------------------------------------------ */
+/* Storage helpers (graceful)                                          */
+/* ------------------------------------------------------------------ */
+function loadAll(){
+  try{ return JSON.parse(localStorage.getItem(STORE_KEY)||'[]'); }
+  catch(e){ storageOk=false; return []; }
+}
+function saveAll(list){
+  try{ localStorage.setItem(STORE_KEY, JSON.stringify(list)); return true; }
+  catch(e){ storageOk=false; document.getElementById('storeNotice').classList.add('show'); return false; }
+}
+/* probe once */
+(function(){ try{ const k='__swimprobe'; localStorage.setItem(k,'1'); localStorage.removeItem(k);}catch(e){ storageOk=false; }
+  if(!storageOk) document.getElementById('storeNotice').classList.add('show'); })();
+
+/* ------------------------------------------------------------------ */
+/* Text generation                                                     */
+/* ------------------------------------------------------------------ */
+function tok(str,p){ return str.replace(/\{poss\}/g,p.poss).replace(/\{refl\}/g,p.refl); }
+function joinList(arr){
+  if(arr.length===0) return '';
+  if(arr.length===1) return arr[0];
+  if(arr.length===2) return arr[0]+' and '+arr[1];
+  return arr.slice(0,-1).join(', ')+', and '+arr[arr.length-1];
+}
+function chunk(arr,n){ const o=[]; for(let i=0;i<arr.length;i+=n) o.push(arr.slice(i,i+n)); return o; }
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+function buildNote(){
+  const p = PRON[state.pronoun]||PRON.she;
+  const name = (state.name||'').trim() || 'Your swimmer';
+  const strengths = SKILLS.filter(s=>state.selections[s.id]==='strength').map(s=>tok(s.strength,p));
+  const focus     = SKILLS.filter(s=>state.selections[s.id]==='focus').map(s=>tok(s.focus,p));
+
+  if(strengths.length===0 && focus.length===0){
+    return `Mark a few of ${name}'s strengths and the things to work on above, then tap “Create evaluation” and a friendly note will appear right here.`;
+  }
+
+  const parts=[];
+
+  // Intro
+  parts.push(pick([
+    `${name} has been such a joy to have in lessons! Here’s a little snapshot of how things are going in the water.`,
+    `${name} is making wonderful progress in our swim lessons — here’s a quick update for you.`,
+    `It’s been so much fun watching ${name} learn and grow in the pool. Here’s where things stand!`,
+  ]));
+
+  // Strengths
+  if(strengths.length){
+    parts.push(pick([
+      `${name} is really shining in a few areas.`,
+      `There’s a lot to celebrate with ${name}.`,
+      `Here’s what ${name} is doing beautifully.`,
+    ]));
+    const groups = chunk(strengths,3);
+    groups.forEach((g,i)=>{
+      if(i===0) parts.push(`${name} ${joinList(g)}.`);
+      else parts.push(pick([`${name} also ${joinList(g)}.`,`On top of that, ${name} ${joinList(g)}.`]));
+    });
+  }
+
+  // Focus
+  if(focus.length){
+    const groups = chunk(focus,3);
+    const lead = pick([`As we keep swimming together, we’ll work on`,`Our next steps together are`,`Here’s what we’ll keep practicing:`]);
+    parts.push(`${lead} ${joinList(groups[0])}.`);
+    if(groups[1]) parts.push(`We’ll also focus on ${joinList(groups[1])}.`);
+    if(groups[2]) parts.push(`And we’ll keep building ${joinList(groups[2])}.`);
+  }
+
+  // Closing
+  parts.push(pick([
+    `${name} should be so proud of how far ${p.subj} ${p.hasHave} come. I can’t wait to see what’s next! 🏊`,
+    `I’m so proud of ${name}, and I love watching ${p.poss} confidence grow each week. See you at the pool! 🌊`,
+    `Keep up the wonderful work, ${name} — ${p.subj} ${p.isAre} doing great! ☀️`,
+  ]));
+
+  return parts.join(' ');
+}
+
+/* ------------------------------------------------------------------ */
+/* Rendering                                                           */
+/* ------------------------------------------------------------------ */
+function renderSkills(){
+  const root=document.getElementById('cats');
+  root.innerHTML='';
+  CATEGORIES.forEach(c=>{
+    const card=document.createElement('section');
+    card.className='card';
+    const h=document.createElement('div');
+    h.className='cat-title';
+    h.innerHTML=`<span class="e">${c.e}</span> ${c.title}`;
+    card.appendChild(h);
+    SKILLS.filter(s=>s.cat===c.id).forEach(s=>{
+      const row=document.createElement('div');
+      row.className='skill';
+      row.innerHTML=`
+        <span class="name">${s.label}</span>
+        <div class="toggles">
+          <button class="tg s" data-id="${s.id}" data-v="strength" aria-pressed="false"><span class="ic">💪</span>Strength</button>
+          <button class="tg f" data-id="${s.id}" data-v="focus" aria-pressed="false"><span class="ic">🎯</span>Work on</button>
+        </div>`;
+      card.appendChild(row);
+    });
+    root.appendChild(card);
+  });
+  root.querySelectorAll('.tg').forEach(b=>b.addEventListener('click',onToggle));
+}
+
+function onToggle(e){
+  const btn=e.currentTarget;
+  const id=btn.dataset.id, v=btn.dataset.v;
+  if(state.selections[id]===v) delete state.selections[id];
+  else state.selections[id]=v;
+  syncToggles(); updateCounts();
+}
+
+function syncToggles(){
+  document.querySelectorAll('.tg').forEach(b=>{
+    const on=state.selections[b.dataset.id]===b.dataset.v;
+    b.classList.toggle('on',on);
+    b.setAttribute('aria-pressed',on?'true':'false');
+  });
+}
+
+function updateCounts(){
+  const vals=Object.values(state.selections);
+  document.getElementById('cMarked').textContent=vals.length;
+  document.getElementById('cStr').textContent=vals.filter(v=>v==='strength').length;
+  document.getElementById('cFoc').textContent=vals.filter(v=>v==='focus').length;
+}
+
+function renderRoster(){
+  const all=loadAll();
+  const box=document.getElementById('chips');
+  if(all.length===0){ box.innerHTML='<span class="roster-empty">No swimmers saved yet — they’ll appear here once you save.</span>'; return; }
+  box.innerHTML='';
+  all.sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0)).forEach(sw=>{
+    const chip=document.createElement('span');
+    chip.className='chip'+(sw.id===state.id?' active':'');
+    const ageTxt=sw.age?` · ${sw.age}`:'';
+    chip.innerHTML=`<span>${escapeHtml(sw.name||'Unnamed')}${ageTxt}</span><span class="x" title="Delete">✕</span>`;
+    chip.querySelector('span:first-child').addEventListener('click',()=>loadSwimmer(sw.id));
+    chip.querySelector('.x').addEventListener('click',(ev)=>{ ev.stopPropagation(); deleteSwimmer(sw.id); });
+    box.appendChild(chip);
+  });
+}
+
+function escapeHtml(s){ return (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+/* ------------------------------------------------------------------ */
+/* Form <-> state                                                      */
+/* ------------------------------------------------------------------ */
+function readForm(){
+  state.name=document.getElementById('name').value;
+  state.age=document.getElementById('age').value.trim();
+}
+function writeForm(){
+  document.getElementById('name').value=state.name||'';
+  document.getElementById('age').value=state.age||'';
+  document.querySelectorAll('#pron button').forEach(b=>b.setAttribute('aria-pressed', b.dataset.p===state.pronoun?'true':'false'));
+  syncToggles(); updateCounts();
+}
+
+function newSwimmer(){
+  state={ id:null, name:'', age:'', pronoun:'she', selections:{}, note:'' };
+  writeForm();
+  document.getElementById('eval').classList.remove('show');
+  renderRoster();
+  document.getElementById('name').focus();
+}
+
+function loadSwimmer(id){
+  const sw=loadAll().find(x=>x.id===id);
+  if(!sw) return;
+  state={ id:sw.id, name:sw.name||'', age:sw.age||'', pronoun:sw.pronoun||'she', selections:Object.assign({},sw.selections||{}), note:sw.note||'' };
+  writeForm();
+  renderRoster();
+  if(sw.note){ showEval(sw.note); } else { document.getElementById('eval').classList.remove('show'); }
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function saveSwimmer(silent){
+  readForm();
+  if(!state.name.trim()){ toast('Add a name first 🙂'); document.getElementById('name').focus(); return; }
+  const all=loadAll();
+  if(!state.id) state.id='s'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+  const rec={ id:state.id, name:state.name.trim(), age:state.age, pronoun:state.pronoun,
+              selections:state.selections, note:document.getElementById('note').value||state.note||'', updatedAt:Date.now() };
+  const i=all.findIndex(x=>x.id===state.id);
+  if(i>=0) all[i]=rec; else all.push(rec);
+  saveAll(all);
+  renderRoster();
+  if(!silent) toast('Saved 💾');
+}
+
+function deleteSwimmer(id){
+  const sw=loadAll().find(x=>x.id===id);
+  if(!confirm(`Remove ${sw?sw.name:'this swimmer'} from the saved list?`)) return;
+  saveAll(loadAll().filter(x=>x.id!==id));
+  if(state.id===id) newSwimmer(); else renderRoster();
+  toast('Removed');
+}
+
+/* ------------------------------------------------------------------ */
+/* Output                                                              */
+/* ------------------------------------------------------------------ */
+function showEval(text){
+  readForm();
+  document.getElementById('evalWho').textContent=(state.name.trim()||'Your swimmer')+(state.age?` · age ${state.age}`:'');
+  document.getElementById('note').value=text;
+  const e=document.getElementById('eval'); e.classList.add('show');
+}
+function generate(){
+  readForm();
+  const text=buildNote();
+  showEval(text);
+  saveSwimmer(true);
+  document.getElementById('eval').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function buildPrint(){
+  readForm();
+  const name=state.name.trim()||'Your swimmer';
+  const strengths=SKILLS.filter(s=>state.selections[s.id]==='strength').map(s=>s.label);
+  const focus=SKILLS.filter(s=>state.selections[s.id]==='focus').map(s=>s.label);
+  const note=document.getElementById('note').value;
+  const date=new Date().toLocaleDateString(undefined,{year:'numeric',month:'long',day:'numeric'});
+  const li=arr=>arr.length?arr.map(x=>`<div class="p-li">• ${escapeHtml(x)}</div>`).join(''):'<div class="p-li" style="color:#5A8087">—</div>';
+  document.getElementById('printArea').innerHTML=`
+    <h1 class="p-title">🏊 ${escapeHtml(name)}${state.age?` · age ${escapeHtml(state.age)}`:''}</h1>
+    <div class="p-sub">Swim Lesson Progress · ${date}</div>
+    <div class="p-note">${escapeHtml(note)}</div>
+    <div class="p-cols">
+      <div class="p-col"><div class="p-h">💪 Strengths</div>${li(strengths)}</div>
+      <div class="p-col"><div class="p-h">🎯 Working on</div>${li(focus)}</div>
+    </div>`;
+}
+
+/* ------------------------------------------------------------------ */
+/* Misc UI                                                             */
+/* ------------------------------------------------------------------ */
+let toastT;
+function toast(msg){
+  const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
+  clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),1800);
+}
+
+/* ------------------------------------------------------------------ */
+/* Wire up                                                             */
+/* ------------------------------------------------------------------ */
+renderSkills();
+renderRoster();
+writeForm();
+
+document.getElementById('pron').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  state.pronoun=b.dataset.p;
+  document.querySelectorAll('#pron button').forEach(x=>x.setAttribute('aria-pressed',x===b?'true':'false'));
+});
+document.getElementById('name').addEventListener('input',()=>{state.name=document.getElementById('name').value;});
+document.getElementById('age').addEventListener('input',()=>{state.age=document.getElementById('age').value;});
+
+document.getElementById('genBtn').addEventListener('click',generate);
+document.getElementById('rewordBtn').addEventListener('click',()=>{ showEval(buildNote()); });
+document.getElementById('saveBtn').addEventListener('click',()=>saveSwimmer(false));
+document.getElementById('newBtn').addEventListener('click',newSwimmer);
+document.getElementById('clearBtn').addEventListener('click',()=>{
+  if(Object.keys(state.selections).length && !confirm('Clear all the marks for this swimmer?')) return;
+  state.selections={}; syncToggles(); updateCounts();
+});
+document.getElementById('copyBtn').addEventListener('click',async()=>{
+  const txt=document.getElementById('note').value;
+  try{ await navigator.clipboard.writeText(txt); toast('Copied to clipboard 📋'); }
+  catch(e){ const ta=document.getElementById('note'); ta.select(); document.execCommand&&document.execCommand('copy'); toast('Copied 📋'); }
+});
+document.getElementById('printBtn').addEventListener('click',()=>{ buildPrint(); window.print(); });
+document.getElementById('note').addEventListener('input',()=>{ state.note=document.getElementById('note').value; });
+</script>
+</body>
+</html>
