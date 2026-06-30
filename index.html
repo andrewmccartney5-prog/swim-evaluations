@@ -200,8 +200,12 @@
   <section class="card swimmer">
     <div class="field-row">
       <div class="field">
-        <label class="lab" for="name">Swimmer’s name</label>
-        <input type="text" id="name" placeholder="e.g. Maya" autocomplete="off" />
+        <label class="lab" for="first">First name</label>
+        <input type="text" id="first" placeholder="e.g. Maya" autocomplete="off" />
+      </div>
+      <div class="field">
+        <label class="lab" for="last">Last name</label>
+        <input type="text" id="last" placeholder="e.g. Johnson" autocomplete="off" />
       </div>
       <div class="field age-field">
         <label class="lab" for="age">Age</label>
@@ -370,7 +374,7 @@ const DID = {
 /* State                                                               */
 /* ------------------------------------------------------------------ */
 const STORE_KEY='swimEvals.v2';
-let state={ id:null, name:'', age:'', pronoun:'she', selections:{}, note:'' };
+let state={ id:null, first:'', last:'', age:'', pronoun:'she', selections:{}, note:'' };
 let storageOk=true;
 
 /* ------------------------------------------------------------------ */
@@ -402,7 +406,7 @@ function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
 
 function buildNote(){
   const p = PRON[state.pronoun]||PRON.she;
-  const name = (state.name||'').trim() || 'your swimmer';
+  const name = (state.first||'').trim() || 'your swimmer';
   const done = SKILLS.filter(s=>state.selections[s.id]===true);
   const todo = SKILLS.filter(s=>state.selections[s.id]!==true);
   const total = SKILLS.length, n = done.length;
@@ -547,7 +551,8 @@ function renderRoster(){
     const chip=document.createElement('span');
     chip.className='chip'+(sw.id===state.id?' active':'');
     const ageTxt=sw.age?` · ${sw.age}`:'';
-    chip.innerHTML=`<span>${escapeHtml(sw.name||'Unnamed')}${ageTxt}</span><span class="x" title="Delete">✕</span>`;
+    const nm=`${escapeHtml(sw.first||sw.name||'Unnamed')}${sw.last?` ${escapeHtml(sw.last)}`:''}`;
+    chip.innerHTML=`<span>${nm}${ageTxt}</span><span class="x" title="Delete">✕</span>`;
     chip.querySelector('span:first-child').addEventListener('click',()=>loadSwimmer(sw.id));
     chip.querySelector('.x').addEventListener('click',(ev)=>{ ev.stopPropagation(); deleteSwimmer(sw.id); });
     box.appendChild(chip);
@@ -560,28 +565,31 @@ function escapeHtml(s){ return (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&
 /* Form <-> state                                                      */
 /* ------------------------------------------------------------------ */
 function readForm(){
-  state.name=document.getElementById('name').value;
+  state.first=document.getElementById('first').value;
+  state.last=document.getElementById('last').value;
   state.age=document.getElementById('age').value.trim();
 }
 function writeForm(){
-  document.getElementById('name').value=state.name||'';
+  document.getElementById('first').value=state.first||'';
+  document.getElementById('last').value=state.last||'';
   document.getElementById('age').value=state.age||'';
   document.querySelectorAll('#pron button').forEach(b=>b.setAttribute('aria-pressed', b.dataset.p===state.pronoun?'true':'false'));
   syncToggles(); updateCounts();
 }
+function fullName(){ return `${(state.first||'').trim()} ${(state.last||'').trim()}`.trim(); }
 
 function newSwimmer(){
-  state={ id:null, name:'', age:'', pronoun:'she', selections:{}, note:'' };
+  state={ id:null, first:'', last:'', age:'', pronoun:'she', selections:{}, note:'' };
   writeForm();
   document.getElementById('eval').classList.remove('show');
   renderRoster();
-  document.getElementById('name').focus();
+  document.getElementById('first').focus();
 }
 
 function loadSwimmer(id){
   const sw=loadAll().find(x=>x.id===id);
   if(!sw) return;
-  state={ id:sw.id, name:sw.name||'', age:sw.age||'', pronoun:sw.pronoun||'she', selections:Object.assign({},sw.selections||{}), note:sw.note||'' };
+  state={ id:sw.id, first:sw.first||sw.name||'', last:sw.last||'', age:sw.age||'', pronoun:sw.pronoun||'she', selections:Object.assign({},sw.selections||{}), note:sw.note||'' };
   writeForm();
   renderRoster();
   if(sw.note){ showEval(sw.note); } else { document.getElementById('eval').classList.remove('show'); }
@@ -590,10 +598,10 @@ function loadSwimmer(id){
 
 function saveSwimmer(silent){
   readForm();
-  if(!state.name.trim()){ toast('Add a name first 🙂'); document.getElementById('name').focus(); return; }
+  if(!state.first.trim()){ toast('Add a first name first 🙂'); document.getElementById('first').focus(); return; }
   const all=loadAll();
   if(!state.id) state.id='s'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
-  const rec={ id:state.id, name:state.name.trim(), age:state.age, pronoun:state.pronoun,
+  const rec={ id:state.id, first:state.first.trim(), last:state.last.trim(), age:state.age, pronoun:state.pronoun,
               selections:state.selections, note:document.getElementById('note').value||state.note||'', updatedAt:Date.now() };
   const i=all.findIndex(x=>x.id===state.id);
   if(i>=0) all[i]=rec; else all.push(rec);
@@ -604,7 +612,8 @@ function saveSwimmer(silent){
 
 function deleteSwimmer(id){
   const sw=loadAll().find(x=>x.id===id);
-  if(!confirm(`Remove ${sw?sw.name:'this swimmer'} from the saved list?`)) return;
+  const nm=sw?`${sw.first||sw.name||''} ${sw.last||''}`.trim():'this swimmer';
+  if(!confirm(`Remove ${nm||'this swimmer'} from the saved list?`)) return;
   saveAll(loadAll().filter(x=>x.id!==id));
   if(state.id===id) newSwimmer(); else renderRoster();
   toast('Removed');
@@ -615,7 +624,7 @@ function deleteSwimmer(id){
 /* ------------------------------------------------------------------ */
 function showEval(text){
   readForm();
-  document.getElementById('evalWho').textContent=(state.name.trim()||'Your swimmer')+(state.age?` · age ${state.age}`:'');
+  document.getElementById('evalWho').textContent=(fullName()||'Your swimmer')+(state.age?` · age ${state.age}`:'');
   document.getElementById('note').value=text;
   const e=document.getElementById('eval'); e.classList.add('show');
 }
@@ -629,7 +638,7 @@ function generate(){
 
 function buildPrint(){
   readForm();
-  const name=state.name.trim()||'Your swimmer';
+  const name=fullName()||'Your swimmer';
   const done=SKILLS.filter(s=>state.selections[s.id]===true).map(s=>s.label);
   const todo=SKILLS.filter(s=>state.selections[s.id]!==true).map(s=>s.label);
   const note=document.getElementById('note').value;
@@ -666,7 +675,8 @@ document.getElementById('pron').addEventListener('click',e=>{
   state.pronoun=b.dataset.p;
   document.querySelectorAll('#pron button').forEach(x=>x.setAttribute('aria-pressed',x===b?'true':'false'));
 });
-document.getElementById('name').addEventListener('input',()=>{state.name=document.getElementById('name').value;});
+document.getElementById('first').addEventListener('input',()=>{state.first=document.getElementById('first').value;});
+document.getElementById('last').addEventListener('input',()=>{state.last=document.getElementById('last').value;});
 document.getElementById('age').addEventListener('input',()=>{state.age=document.getElementById('age').value;});
 
 document.getElementById('genBtn').addEventListener('click',generate);
